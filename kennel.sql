@@ -58,9 +58,8 @@ INSERT INTO `Animal` VALUES (null, "Daps", "Kennel", "Boxer", 2, 2);
 INSERT INTO `Animal` VALUES (null, "Cleo", "Kennel", "Poodle", 2, 2);
 INSERT INTO `Animal` VALUES (null, "Popcorn", "Kennel", "Beagle", 3, 2);
 INSERT INTO `Animal` VALUES (null, "Curly", "Treatment", "Poodle", 4, 2);
-INSERT INTO `Animal` VALUES (null, "Daps", "Kennel", "Boxer", 2, 2);
 
--- Get only the animal rows where the `id` field value is 3
+--- Get only the animal rows where the `id` field value is 3
 SELECT
     a.id,
     a.name,
@@ -71,24 +70,89 @@ SELECT
 FROM animal a
 WHERE a.id = 3
 
--- Get only the animal rows where the `id` field value is 3
-SELECT
-    a.id,
-    a.name
-FROM customer a
-WHERE a.id = 3
+INSERT INTO `Animal` VALUES (null, "Daps", "Kennel", "Boxer", 2, 2);
 
--- Get only the animal rows where the `id` field value is 3
-SELECT
-    a.id,
-    a.name
-FROM employee a
-WHERE a.id = 3
+INSERT INTO `Employee` VALUES (null, "Leah Hoefling", "200 Success Way", 2);
 
--- Get only the animal rows where the `id` field value is 3
+INSERT INTO `Animal` VALUES (null, "Patch", "Kennel", "Cute boi", 2, 2);
+
 SELECT
     a.id,
     a.name,
-    a.address
-FROM location a
-WHERE a.id = 3
+    a.breed,
+    a.status,
+    a.location_id,
+    a.customer_id,
+    l.name location_name,
+    l.address location_address,
+		c.name customer_name,
+		c.address customer_address,
+		c.email customer_email
+FROM Animal a
+JOIN Location l
+    ON l.id = a.location_id
+JOIN Customer c
+		ON c.id = a.customer_id
+
+SELECT
+		a.id,
+		a.name,
+		a.address,
+		a.location_id,
+		l.name location_name,
+		l.address location_address
+FROM employee a
+JOIN location l ON a.location_id = l.id
+
+SELECT
+		l.id,
+		l.name,
+		l.address,
+		e.id employee_id,
+		e.name employee_name,
+		e.address employee_address,
+		a.id animal_id,
+		a.name animal_name,
+		a.breed animal_breed,
+		a.status animal_status
+FROM location l
+JOIN employee e ON l.id = e.location_id
+JOIN animal a ON l.id = a.location_id
+WHERE l.id = 1
+
+SELECT
+		l.id,
+		l.name,
+		l.address
+FROM location l
+WHERE l.id = 1
+
+SELECT
+		e.id employee_id,
+		e.name employee_name,
+		e.address employee_address,
+		e.location_id employee_location_id
+FROM employee e
+WHERE e.location_id = 1
+
+SELECT
+		a.id animal_id,
+		a.name animal_name,
+		a.breed animal_breed,
+		a.status animal_status,
+		a.location_id animal_location_id,
+		a.customer_id animal_customer_id
+FROM animal a
+WHERE a.location_id = 1
+
+SELECT * FROM Animal ORDER BY id DESC;
+
+SELECT
+		a.id,
+		a.name,
+		a.breed,
+		a.status,
+		a.location_id,
+		a.customer_id
+FROM animal a
+WHERE a.name LIKE "%do%" OR a.breed LIKE "%do%"
