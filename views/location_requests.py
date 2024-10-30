@@ -1,6 +1,8 @@
 import sqlite3
 import json
 from models import Location
+from models.animal import Animal
+from models.employee import Employee
 
 LOCATIONS = [
     {
@@ -56,7 +58,9 @@ def get_single_location(id):
     with sqlite3.connect("./kennel.sqlite3") as conn:
         conn.row_factory = sqlite3.Row
         db_cursor = conn.cursor()
-
+        employee_db_cursor = conn.cursor()
+        animal_db_cursor = conn.cursor()
+        
         # Use a ? parameter to inject a variable's value
         # into the SQL statement.
         db_cursor.execute("""
@@ -73,24 +77,75 @@ def get_single_location(id):
 
         # Create an location instance from the current row
         location = Location(data['id'], data['name'], data['address'])
+        
+        employee_db_cursor.execute("""
+        SELECT
+            e.id employee_id,
+            e.name employee_name,
+            e.address employee_address,
+            e.location_id employee_location_id
+        FROM employee e
+        WHERE e.location_id = ?
+        """, ( id, ))
+        
+        employee_data = employee_db_cursor.fetchall()
+        
+        employees = []
+        
+        for row in employee_data:
+            employee = Employee(row['employee_id'], row['employee_name'], row['employee_address'], row['employee_location_id'])
+            
+            employees.append(employee.serialized())
+
+        location.employees = employees
+        
+        animal_db_cursor.execute("""
+        SELECT
+            a.id animal_id,
+            a.name animal_name,
+            a.breed animal_breed,
+            a.status animal_status,
+            a.location_id animal_location_id,
+            a.customer_id animal_customer_id
+        FROM animal a
+        WHERE a.location_id = ?
+        """, ( id, ))
+
+        animal_data = animal_db_cursor.fetchall()
+        
+        animals = []
+        
+        for row in animal_data:
+            animal = Animal(row['animal_id'], row['animal_name'], row['animal_breed'], row['animal_status'], row['animal_location_id'], row['animal_customer_id'])
+            
+            animals.append(animal.serialized())
+        
+        location.animals = animals
 
         return location.__dict__
 
-def create_location(location):
-    # Get the id value of the last location in the list
-    max_id = LOCATIONS[-1]["id"]
+def create_location(new_location):
+    with sqlite3.connect("./kennel.sqlite3") as conn:
+        db_cursor = conn.cursor()
 
-    # Add 1 to whatever that number is
-    new_id = max_id + 1
+        db_cursor.execute("""
+        INSERT INTO Location
+            ( name, address )
+        VALUES
+            ( ?, ?);
+        """, (new_location['name'], new_location['address'] ))
 
-    # Add an `id` property to the location dictionary
-    location["id"] = new_id
+        # The `lastrowid` property on the cursor will return
+        # the primary key of the last thing that got added to
+        # the database.
+        id = db_cursor.lastrowid
 
-    # Add the location dictionary to the list
-    LOCATIONS.append(location)
+        # Add the `id` property to the employee dictionary that
+        # was sent by the client so that the client sees the
+        # primary key in the response.
+        new_location['id'] = id
 
-    # Return the dictionary with `id` property added
-    return location
+    return new_location
 
 def delete_location(id):
     with sqlite3.connect("./kennel.sqlite3") as conn:
@@ -100,7 +155,6 @@ def delete_location(id):
         DELETE FROM location
         WHERE id = ?
         """, (id, ))
-
 
 def update_location(id, new_location):
     with sqlite3.connect("./kennel.sqlite3") as conn:
